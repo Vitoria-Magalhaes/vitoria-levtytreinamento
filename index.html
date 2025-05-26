@@ -1,6 +1,137 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script>
+    const params = new URLSearchParams(window.location.search);
+const texto = params.get('q');
+
+let dadosQrCode = null;
+try {
+  dadosQrCode = texto ? JSON.parse(decodeURIComponent(texto)) : null;
+} catch(e) {
+  console.log('Erro ao fazer parse do JSON:', e);
+}
+
+    console.log('dados' + dadosQrCode)
+
+    if (dadosQrCode) {
+  document.getElementById('protocolo').textContent = dadosQrCode.protocolo;
+  document.getElementById('data').textContent = dadosQrCode.data;
+  document.getElementById('solicitante').textContent = dadosQrCode.solicitante;
+  document.getElementById('totalGeral').textContent = dadosQrCode.totalGeral.toFixed(2);
+  document.getElementById('status').textContent = dadosQrCode.status;
+
+  const container = document.getElementById('tabelas-fornecedores');
+  dadosQrCode.fornecedores.forEach(fornecedor => {
+    const tabela = document.createElement('table');
+
+    tabela.innerHTML = `
+      <thead>
+        <tr>
+          <th>Produto</th><th>Qtde</th><th>Unitário</th><th>Frete</th><th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${fornecedor.itens.map(item => `
+          <tr>
+            <td data-label="Produto">${item.produto}</td>
+            <td data-label="Qtde">${item.quantidade}</td>
+            <td data-label="Unitário">R$ ${item.precoUnitario.toFixed(2)}</td>
+            <td data-label="Frete">R$ ${item.valorDoFrete.toFixed(2)}</td>
+            <td data-label="Total">R$ ${item.total.toFixed(2)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="4"><strong>Total ${fornecedor.nome}:</strong></td>
+          <td><strong>R$ ${fornecedor.total.toFixed(2)}</strong></td>
+        </tr>
+      </tfoot>
+    `;
+
+    const titulo = document.createElement('h3');
+
+    container.appendChild(titulo);
+    container.appendChild(tabela);
+  });
+
+} else {
+  document.body.textContent = 'Nenhum dado recebido.';
+}
+
+  </script>
+  
+<style>
+
+  table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+}
+
+thead {
+  background-color: #f2f2f2;
+}
+
+@media screen and (max-width: 600px) {
+  table, thead, tbody, th, td, tr {
+    display: block;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tr {
+    margin-bottom: 15px;
+  }
+
+  td {
+    position: relative;
+    padding-left: 50%;
+  }
+
+  td::before {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 45%;
+    white-space: nowrap;
+    font-weight: bold;
+    content: attr(data-label);
+  }
+}
+  
+  body {
+    font-family: Arial, sans-serif;
+    margin: 40px;
+    background: #f9f9f9;
+    color: #333;
+  }
+  .container {
+    background: white;
+    padding: 20px 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgb(0 0 0 / 0.1);
+    max-width: 600px;
+    margin: auto;
+  }
+  pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 18px;
+  }
+</style>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Detalhes do QR Code</title>
@@ -31,62 +162,47 @@
   </style>
 </head>
 <body>
+<div class="dados-gerais">
 
- <div id="tabela-container"></div>
+  <h1>Detalhes do Pedido</h1>
 
-<script>
-  const params = new URLSearchParams(window.location.search);
-  const texto = params.get('q') || null;
+  <p><strong>Protocolo:</strong> <span id="protocolo"></span></p>
+  <p><strong>Data:</strong> <span id="data"></span></p>
+  <p><strong>Solicitante:</strong> <span id="solicitante"></span></p>
+</div>
 
-  if (texto) {
-    try {
-      const dadosQrCode = JSON.parse(decodeURIComponent(texto));
+<div id="tabelas-fornecedores"></div>
+  <div id="tabela-container"></div>
 
-      document.getElementById('protocolo').textContent = dadosQrCode.protocolo;
-      document.getElementById('data').textContent = dadosQrCode.data;
-      document.getElementById('solicitante').textContent = dadosQrCode.solicitante;
+<div class="resumo-final">
+  <p><strong>Total Geral:</strong> R$ <span id="totalGeral"></span></p>
+  <p><strong>Status:</strong> <span id="status"></span></p>
+</div>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const texto = params.get('q') || null;
 
-      const fornecedores = dadosQrCode.fornecedores;
+    if (texto) {
+      try {
+        const dadosQrCode = JSON.parse(decodeURIComponent(texto));
 
-      // Função que monta a tabela HTML
-      function gerarTabelaHTML(fornecedores) {
-        let html = '<table border="1" cellpadding="5" cellspacing="0">';
-        html += '<thead><tr><th>Fornecedor</th><th>Produto</th><th>Qtd</th><th>Preço Unit.</th><th>Frete</th><th>Total</th></tr></thead>';
-        html += '<tbody>';
+        document.getElementById('protocolo').textContent = dadosQrCode.protocolo;
+        document.getElementById('data').textContent = dadosQrCode.data;
+        document.getElementById('solicitante').textContent = dadosQrCode.solicitante;
 
-        fornecedores.forEach(fornecedor => {
-          const numItens = fornecedor.itens.length;
-
-          fornecedor.itens.forEach((item, index) => {
-            html += '<tr>';
-            if (index === 0) {
-              html += <td rowspan="${numItens}">${fornecedor.nome}</td>;
-            }
-            html += <td>${item.produto}</td>;
-            html += <td>${item.quantidade}</td>;
-            html += <td>R$ ${item.precoUnitario.toFixed(2)}</td>;
-            html += <td>R$ ${item.valorDoFrete.toFixed(2)}</td>;
-            html += <td>R$ ${item.total.toFixed(2)}</td>;
-            html += '</tr>';
-          });
-
-          html += <tr><td colspan="5" style="text-align:right;font-weight:bold;">Total ${fornecedor.nome}:</td><td>R$ ${fornecedor.total.toFixed(2)}</td></tr>;
-        });
-
-        html += '</tbody></table>';
-        return html;
+        // Insere o HTML da tabela que veio pronto
+        if (dadosQrCode.tabelaHTML) {
+          document.getElementById('tabela-container').innerHTML = dadosQrCode.tabelaHTML;
+        } else {
+          document.getElementById('tabela-container').textContent = 'Nenhuma tabela disponível.';
+        }
+      } catch (e) {
+        document.body.textContent = 'Erro ao processar os dados: ' + e.message;
       }
-
-      // Insere a tabela no container
-      document.getElementById('tabela-container').innerHTML = gerarTabelaHTML(fornecedores);
-
-    } catch (e) {
-      document.body.textContent = 'Erro ao processar os dados: ' + e.message;
+    } else {
+      document.body.textContent = 'Nenhum dado recebido.';
     }
-  } else {
-    document.body.textContent = 'Nenhum dado recebido.';
-  }
-</script>
+  </script>
 
 </body>
 </html>
