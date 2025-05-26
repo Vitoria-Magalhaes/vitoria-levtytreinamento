@@ -5,6 +5,53 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <style>
+
+  table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+}
+
+thead {
+  background-color: #f2f2f2;
+}
+
+@media screen and (max-width: 600px) {
+  table, thead, tbody, th, td, tr {
+    display: block;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tr {
+    margin-bottom: 15px;
+  }
+
+  td {
+    position: relative;
+    padding-left: 50%;
+  }
+
+  td::before {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 45%;
+    white-space: nowrap;
+    font-weight: bold;
+    content: attr(data-label);
+  }
+}
+  
   body {
     font-family: Arial, sans-serif;
     margin: 40px;
@@ -27,10 +74,46 @@
 </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Texto do QR Code</h1>
-    <pre id="texto"></pre>
-  </div>
+<div class="dados-gerais">
+  <p><strong>Protocolo:</strong> {{_pin.protocolo}}</p>
+  <p><strong>Data:</strong> {{dataFormatada}}</p>
+  <p><strong>Solicitante:</strong> {{_pin.solicitante}}</p>
+</div>
+
+<div v-for="(itens, fornecedor) in agrupadosPorFornecedor" :key="fornecedor" class="tabela-fornecedor">
+  <h3>Fornecedor: {{fornecedor}}</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Produto</th>
+        <th>Qtde</th>
+        <th>Unitário</th>
+        <th>Frete</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="item in itens" :key="item.id">
+        <td>{{ item.produto }}</td>
+        <td>{{ item.quantidade }}</td>
+        <td>R${{ item.precoUnitario.toFixed(2) }}</td>
+        <td>R${{ item.valorDoFrete.toFixed(2) }}</td>
+        <td>R${{ (item.precoUnitario * item.quantidade + item.valorDoFrete).toFixed(2) }}</td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="4"><strong>Total {{ fornecedor }}:</strong></td>
+        <td><strong>R${{ calcularTotalFornecedor(itens).toFixed(2) }}</strong></td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
+<div class="resumo-final">
+  <p><strong>Total Geral:</strong> R${{ totalGeral.toFixed(2) }}</p>
+  <p><strong>Status:</strong> {{_pin.etapa}}</p>
+</div>
 
   <script>
     // Pega o parâmetro "q" da URL e mostra na página
