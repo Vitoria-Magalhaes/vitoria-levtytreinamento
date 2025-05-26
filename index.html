@@ -3,7 +3,18 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script>
+    // Pega o parâmetro "q" da URL e mostra na página
+    const params = new URLSearchParams(window.location.search);
+   if(texto){
+     const dadosQrCode = JSON.parse(decodeURIComponent(texto)
+    document.getElementById('protocolo').textContent = dadosQrCode.protocolo;
+    document.getElementById('data').textContent = dadosQrCode.data;
+    document.getElementById('solicitante').textContent = dadosQrCode.solicitante;
 
+   le protoclo =  dadosqrcode.protocolo;
+  </script>
+  
 <style>
 
   table {
@@ -75,7 +86,7 @@ thead {
 </head>
 <body>
 <div class="dados-gerais">
-  <p><strong>Protocolo:</strong> {{_pin.protocolo}}</p>
+  <p><strong>Protocolo:</strong> <span id="protocolo"</p>
   <p><strong>Data:</strong> {{dataFormatada}}</p>
   <p><strong>Solicitante:</strong> {{_pin.solicitante}}</p>
 </div>
@@ -115,12 +126,6 @@ thead {
   <p><strong>Status:</strong> {{_pin.etapa}}</p>
 </div>
 
-  <script>
-    // Pega o parâmetro "q" da URL e mostra na página
-    const params = new URLSearchParams(window.location.search);
-    const texto = params.get('q') || "Nenhum texto fornecido.";
-    console.log(texto)
-    document.getElementById('texto').textContent = decodeURIComponent(texto);
-  </script>
+
 </body>
 </html>
