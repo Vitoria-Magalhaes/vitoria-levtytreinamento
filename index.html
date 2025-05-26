@@ -11,7 +11,7 @@ let dadosQrCode = null;
 try {
   dadosQrCode = texto ? JSON.parse(decodeURIComponent(texto)) : null;
 } catch(e) {
-  console.error('Erro ao fazer parse do JSON:', e);
+  console.log('Erro ao fazer parse do JSON:', e);
 }
 
     console.log('dados' + dadosQrCode)
