@@ -119,7 +119,7 @@ thead {
     // Pega o parâmetro "q" da URL e mostra na página
     const params = new URLSearchParams(window.location.search);
     const texto = params.get('q') || "Nenhum texto fornecido.";
-    console.log(q)
+    console.log(texto)
     document.getElementById('texto').textContent = decodeURIComponent(texto);
   </script>
 </body>
