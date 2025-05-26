@@ -4,15 +4,63 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script>
-    // Pega o parâmetro "q" da URL e mostra na página
     const params = new URLSearchParams(window.location.search);
-   if(texto){
-     const dadosQrCode = JSON.parse(decodeURIComponent(texto)
-    document.getElementById('protocolo').textContent = dadosQrCode.protocolo;
-    document.getElementById('data').textContent = dadosQrCode.data;
-    document.getElementById('solicitante').textContent = dadosQrCode.solicitante;
+const texto = params.get('q');
 
-   le protoclo =  dadosqrcode.protocolo;
+let dadosQrCode = null;
+try {
+  dadosQrCode = texto ? JSON.parse(decodeURIComponent(texto)) : null;
+} catch(e) {
+  console.error('Erro ao fazer parse do JSON:', e);
+}
+
+    if (dadosQrCode) {
+  document.getElementById('protocolo').textContent = dadosQrCode.protocolo;
+  document.getElementById('data').textContent = dadosQrCode.data;
+  document.getElementById('solicitante').textContent = dadosQrCode.solicitante;
+  document.getElementById('totalGeral').textContent = dadosQrCode.totalGeral.toFixed(2);
+  document.getElementById('status').textContent = dadosQrCode.status;
+
+  const container = document.getElementById('tabelas-fornecedores');
+  dadosQrCode.fornecedores.forEach(fornecedor => {
+    const tabela = document.createElement('table');
+
+    tabela.innerHTML = `
+      <thead>
+        <tr>
+          <th>Produto</th><th>Qtde</th><th>Unitário</th><th>Frete</th><th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${fornecedor.itens.map(item => `
+          <tr>
+            <td data-label="Produto">${item.produto}</td>
+            <td data-label="Qtde">${item.quantidade}</td>
+            <td data-label="Unitário">R$ ${item.precoUnitario.toFixed(2)}</td>
+            <td data-label="Frete">R$ ${item.valorDoFrete.toFixed(2)}</td>
+            <td data-label="Total">R$ ${item.total.toFixed(2)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="4"><strong>Total ${fornecedor.nome}:</strong></td>
+          <td><strong>R$ ${fornecedor.total.toFixed(2)}</strong></td>
+        </tr>
+      </tfoot>
+    `;
+
+    const titulo = document.createElement('h3');
+    titulo.textContent = Fornecedor: ${fornecedor.nome};
+
+    container.appendChild(titulo);
+    container.appendChild(tabela);
+  });
+
+} else {
+  document.body.textContent = 'Nenhum dado recebido.';
+}
+
   </script>
   
 <style>
@@ -86,46 +134,17 @@ thead {
 </head>
 <body>
 <div class="dados-gerais">
-  <p><strong>Protocolo:</strong> <span id="protocolo"</p>
-  <p><strong>Data:</strong> {{dataFormatada}}</p>
-  <p><strong>Solicitante:</strong> {{_pin.solicitante}}</p>
+  <p><strong>Protocolo:</strong> <span id="protocolo"></span></p>
+  <p><strong>Data:</strong> <span id="data"></span></p>
+  <p><strong>Solicitante:</strong> <span id="solicitante"></span></p>
 </div>
 
-<div v-for="(itens, fornecedor) in agrupadosPorFornecedor" :key="fornecedor" class="tabela-fornecedor">
-  <h3>Fornecedor: {{fornecedor}}</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Produto</th>
-        <th>Qtde</th>
-        <th>Unitário</th>
-        <th>Frete</th>
-        <th>Total</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-for="item in itens" :key="item.id">
-        <td>{{ item.produto }}</td>
-        <td>{{ item.quantidade }}</td>
-        <td>R${{ item.precoUnitario.toFixed(2) }}</td>
-        <td>R${{ item.valorDoFrete.toFixed(2) }}</td>
-        <td>R${{ (item.precoUnitario * item.quantidade + item.valorDoFrete).toFixed(2) }}</td>
-      </tr>
-    </tbody>
-    <tfoot>
-      <tr>
-        <td colspan="4"><strong>Total {{ fornecedor }}:</strong></td>
-        <td><strong>R${{ calcularTotalFornecedor(itens).toFixed(2) }}</strong></td>
-      </tr>
-    </tfoot>
-  </table>
-</div>
+<div id="tabelas-fornecedores"></div>
 
 <div class="resumo-final">
-  <p><strong>Total Geral:</strong> R${{ totalGeral.toFixed(2) }}</p>
-  <p><strong>Status:</strong> {{_pin.etapa}}</p>
+  <p><strong>Total Geral:</strong> R$ <span id="totalGeral"></span></p>
+  <p><strong>Status:</strong> <span id="status"></span></p>
 </div>
-
 
 </body>
 </html>
