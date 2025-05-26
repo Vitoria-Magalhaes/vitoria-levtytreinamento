@@ -1,208 +1,112 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script>
-    const params = new URLSearchParams(window.location.search);
-const texto = params.get('q');
-
-let dadosQrCode = null;
-try {
-  dadosQrCode = texto ? JSON.parse(decodeURIComponent(texto)) : null;
-} catch(e) {
-  console.log('Erro ao fazer parse do JSON:', e);
-}
-
-    console.log('dados' + dadosQrCode)
-
-    if (dadosQrCode) {
-  document.getElementById('protocolo').textContent = dadosQrCode.protocolo;
-  document.getElementById('data').textContent = dadosQrCode.data;
-  document.getElementById('solicitante').textContent = dadosQrCode.solicitante;
-  document.getElementById('totalGeral').textContent = dadosQrCode.totalGeral.toFixed(2);
-  document.getElementById('status').textContent = dadosQrCode.status;
-
-  const container = document.getElementById('tabelas-fornecedores');
-  dadosQrCode.fornecedores.forEach(fornecedor => {
-    const tabela = document.createElement('table');
-
-    tabela.innerHTML = `
-      <thead>
-        <tr>
-          <th>Produto</th><th>Qtde</th><th>Unitário</th><th>Frete</th><th>Total</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${fornecedor.itens.map(item => `
-          <tr>
-            <td data-label="Produto">${item.produto}</td>
-            <td data-label="Qtde">${item.quantidade}</td>
-            <td data-label="Unitário">R$ ${item.precoUnitario.toFixed(2)}</td>
-            <td data-label="Frete">R$ ${item.valorDoFrete.toFixed(2)}</td>
-            <td data-label="Total">R$ ${item.total.toFixed(2)}</td>
-          </tr>
-        `).join('')}
-      </tbody>
-      <tfoot>
-        <tr>
-          <td colspan="4"><strong>Total ${fornecedor.nome}:</strong></td>
-          <td><strong>R$ ${fornecedor.total.toFixed(2)}</strong></td>
-        </tr>
-      </tfoot>
-    `;
-
-    const titulo = document.createElement('h3');
-
-    container.appendChild(titulo);
-    container.appendChild(tabela);
-  });
-
-} else {
-  document.body.textContent = 'Nenhum dado recebido.';
-}
-
-  </script>
-  
-<style>
-
-  table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
-}
-
-th, td {
-  border: 1px solid #ccc;
-  padding: 8px;
-  text-align: left;
-}
-
-thead {
-  background-color: #f2f2f2;
-}
-
-@media screen and (max-width: 600px) {
-  table, thead, tbody, th, td, tr {
-    display: block;
-  }
-
-  thead {
-    display: none;
-  }
-
-  tr {
-    margin-bottom: 15px;
-  }
-
-  td {
-    position: relative;
-    padding-left: 50%;
-  }
-
-  td::before {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    width: 45%;
-    white-space: nowrap;
-    font-weight: bold;
-    content: attr(data-label);
-  }
-}
-  
-  body {
-    font-family: Arial, sans-serif;
-    margin: 40px;
-    background: #f9f9f9;
-    color: #333;
-  }
-  .container {
-    background: white;
-    padding: 20px 30px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgb(0 0 0 / 0.1);
-    max-width: 600px;
-    margin: auto;
-  }
-  pre {
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    font-size: 18px;
-  }
-</style>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Detalhes do QR Code</title>
+  <meta charset="UTF-8">
+  <title>Visualização da Cotação</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 20px;
+      margin: 40px;
+    }
+    h1, h2 {
+      text-align: center;
     }
     table {
-      border-collapse: collapse;
       width: 100%;
-      margin-top: 20px;
-    }
-    table, th, td {
-      border: 1px solid #333;
+      border-collapse: collapse;
+      margin: 30px 0;
     }
     th, td {
+      border: 1px solid #ccc;
       padding: 8px;
-      text-align: left;
+      text-align: center;
     }
     th {
       background-color: #f0f0f0;
     }
-    #tabela-container tr:last-child td {
-      font-weight: bold;
+    .info {
+      margin-bottom: 20px;
+      text-align: center;
+      font-size: 1.1em;
+    }
+    .total-geral {
       text-align: right;
+      font-weight: bold;
+      margin-top: 30px;
+      font-size: 1.2em;
     }
   </style>
 </head>
 <body>
-<div class="dados-gerais">
 
-  <h1>Detalhes do Pedido</h1>
+  <h1>Relatório de Cotação</h1>
 
-  <p><strong>Protocolo:</strong> <span id="protocolo"></span></p>
-  <p><strong>Data:</strong> <span id="data"></span></p>
-  <p><strong>Solicitante:</strong> <span id="solicitante"></span></p>
-</div>
+  <div class="info" id="info"></div>
 
-<div id="tabelas-fornecedores"></div>
-  <div id="tabela-container"></div>
+  <div id="tabela"></div>
 
-<div class="resumo-final">
-  <p><strong>Total Geral:</strong> R$ <span id="totalGeral"></span></p>
-  <p><strong>Status:</strong> <span id="status"></span></p>
-</div>
+  <div class="total-geral" id="totalGeral"></div>
+
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const texto = params.get('q') || null;
+    function getQueryParam(name) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(name);
+    }
 
-    if (texto) {
+    function gerarTabelaHTML(fornecedores) {
+      let html = '<table>';
+      html += '<thead><tr><th>Fornecedor</th><th>Produto</th><th>Qtd</th><th>Preço Unit.</th><th>Frete</th><th>Total</th></tr></thead>';
+      html += '<tbody>';
+
+      fornecedores.forEach(fornecedor => {
+        const numItens = fornecedor.itens.length;
+
+        fornecedor.itens.forEach((item, index) => {
+          html += '<tr>';
+          if (index === 0) {
+            html += <td rowspan="${numItens}">${fornecedor.nome}</td>;
+          }
+          html += <td>${item.produto}</td>;
+          html += <td>${item.quantidade}</td>;
+          html += <td>R$ ${item.precoUnitario.toFixed(2)}</td>;
+          html += <td>R$ ${item.valorDoFrete.toFixed(2)}</td>;
+          html += <td>R$ ${item.total.toFixed(2)}</td>;
+          html += '</tr>';
+        });
+
+        html += <tr><td colspan="5" style="text-align:right;font-weight:bold;">Total ${fornecedor.nome}:</td><td>R$ ${fornecedor.total.toFixed(2)}</td></tr>;
+      });
+
+      html += '</tbody></table>';
+      return html;
+    }
+
+    // Lê o parâmetro q da URL
+    const q = getQueryParam('q');
+    if (q) {
       try {
-        const dadosQrCode = JSON.parse(decodeURIComponent(texto));
+        const dados = JSON.parse(decodeURIComponent(q));
 
-        document.getElementById('protocolo').textContent = dadosQrCode.protocolo;
-        document.getElementById('data').textContent = dadosQrCode.data;
-        document.getElementById('solicitante').textContent = dadosQrCode.solicitante;
+        // Info do cabeçalho
+        document.getElementById('info').innerHTML = `
+          <p><strong>Protocolo:</strong> ${dados.protocolo}</p>
+          <p><strong>Data:</strong> ${dados.data}</p>
+          <p><strong>Status:</strong> ${dados.status}</p>
+        `;
 
-        // Insere o HTML da tabela que veio pronto
-        if (dadosQrCode.tabelaHTML) {
-          document.getElementById('tabela-container').innerHTML = dadosQrCode.tabelaHTML;
-        } else {
-          document.getElementById('tabela-container').textContent = 'Nenhuma tabela disponível.';
-        }
+        // Tabela
+        const htmlTabela = gerarTabelaHTML(dados.fornecedores);
+        document.getElementById('tabela').innerHTML = htmlTabela;
+
+        // Total geral
+        document.getElementById('totalGeral').innerText = Total Geral: R$ ${dados.totalGeral.toFixed(2)};
       } catch (e) {
-        document.body.textContent = 'Erro ao processar os dados: ' + e.message;
+        document.body.innerHTML = "<h2>Erro ao carregar os dados da cotação.</h2>";
+        console.error('Erro ao decodificar JSON:', e);
       }
     } else {
-      document.body.textContent = 'Nenhum dado recebido.';
+      document.body.innerHTML = "<h2>Nenhum dado de cotação encontrado na URL.</h2>";
     }
   </script>
-
 </body>
 </html>
