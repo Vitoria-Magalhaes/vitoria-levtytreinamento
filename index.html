@@ -118,6 +118,7 @@ thead {
   <script>
     // Pega o parâmetro "q" da URL e mostra na página
     const params = new URLSearchParams(window.location.search);
+    console.log(params)
     const texto = params.get('q') || "Nenhum texto fornecido.";
     // Decodifica URI para mostrar caracteres especiais
     document.getElementById('texto').textContent = decodeURIComponent(texto);
