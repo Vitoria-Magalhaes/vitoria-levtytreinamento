@@ -6,63 +6,37 @@
   <title>Detalhes do QR Code</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: Consolas, monospace;
       padding: 20px;
+      background-color: #f9f9f9;
     }
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      margin-top: 20px;
-    }
-    table, th, td {
-      border: 1px solid #333;
-    }
-    th, td {
-      padding: 8px;
-      text-align: left;
-    }
-    th {
-      background-color: #f0f0f0;
-    }
-    #tabela-container tr:last-child td {
-      font-weight: bold;
-      text-align: right;
+    pre {
+      background-color: #eee;
+      padding: 15px;
+      border-radius: 5px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
     }
   </style>
 </head>
 <body>
 
-  <h1>Detalhes do Pedido</h1>
-
-  <p><strong>Protocolo:</strong> <span id="protocolo"></span></p>
-  <p><strong>Data:</strong> <span id="data"></span></p>
-  <p><strong>Solicitante:</strong> <span id="solicitante"></span></p>
-
-  <div id="tabela-container"></div>
+  <h1>JSON do Pedido</h1>
+  <pre id="json-container">Carregando dados...</pre>
 
   <script>
     const params = new URLSearchParams(window.location.search);
-    const texto = params.get('q') || null;
+    const texto = params.get('q');
 
     if (texto) {
       try {
         const dadosQrCode = JSON.parse(decodeURIComponent(texto));
-
-        document.getElementById('protocolo').textContent = dadosQrCode.protocolo;
-        document.getElementById('data').textContent = dadosQrCode.data;
-        document.getElementById('solicitante').textContent = dadosQrCode.solicitante;
-
-        // Insere o HTML da tabela que veio pronto
-        if (dadosQrCode.tabelaHTML) {
-          document.getElementById('tabela-container').innerHTML = dadosQrCode.tabelaHTML;
-        } else {
-          document.getElementById('tabela-container').textContent = 'Nenhuma tabela disponível.';
-        }
+        document.getElementById('json-container').textContent = JSON.stringify(dadosQrCode, null, 2);
       } catch (e) {
-        document.body.textContent = 'Erro ao processar os dados: ' + e.message;
+        document.getElementById('json-container').textContent = 'Erro ao processar os dados: ' + e.message;
       }
     } else {
-      document.body.textContent = 'Nenhum dado recebido.';
+      document.getElementById('json-container').textContent = 'Nenhum dado recebido.';
     }
   </script>
 
